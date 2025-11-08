@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DC - Color Value Converter</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+      }
+
+      .container {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 900px;
+        padding: 30px;
+      }
+
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .description {
+        text-align: center;
+        color: #7f8c8d;
+        margin-bottom: 30px;
+        line-height: 1.5;
+      }
+
+      .color-preview {
+        width: 100%;
+        height: 120px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+      }
+
+      .color-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+      }
+
+      .input-group label {
+        width: 120px;
+        color: #2c3e50;
+        font-weight: 500;
+      }
+
+      .input-group input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .copy-btn,
+      .reset-btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .copy-btn {
+        background-color: #3498db;
+        color: white;
+      }
+
+      .copy-btn:hover {
+        background-color: #2980b9;
+      }
+
+      .reset-btn {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .reset-btn:hover {
+        background-color: #c0392b;
+      }
+
+      .copy-btn:active,
+      .reset-btn:active {
+        transform: translateY(1px);
+      }
+
+      .copy-btn.copied {
+        background-color: #27ae60;
+      }
+
+      .instructions {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #e8f4fc;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .instructions h3 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .instructions p {
+        color: #34495e;
+        line-height: 1.5;
+        margin-bottom: 10px;
+      }
+
+      .example {
+        background-color: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-family: monospace;
+      }
+
+      .error-message {
+        color: #e74c3c;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>DC - Color Value Converter</h1>
+      <p class="description">
+        Select a color to get the
+        <a
+          href="https://doublecmd.github.io/doc/en/configuration.html#ConfigToolsEditorHL"
+          target="_blank"
+          >decimal color value</a
+        >
+        required by Double Commander
+        <code class="file-path">settings/colors.json</code
+        >.<br />Or<br />Convert a decimal value back to see what's the color
+        look like.
+      </p>
+
+      <style>
+        .file-path {
+          background-color: #393f4a1c;
+          color: #000000;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: monospace;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+      </style>
+      <div class="color-preview" id="colorPreview">Current Color</div>
+
+      <div class="color-inputs">
+        <div class="input-group">
+          <label for="colorPicker">Select Color:</label>
+          <input type="color" id="colorPicker" value="#00b294" />
+        </div>
+
+        <div class="input-group">
+          <label for="hexInput"
+            >Hex Value:<br /><span class="color-hint">(#RRGGBB)</span></label
+          >
+          <style>
+            .color-hint {
+              color: #888888;
+              font-size: 0.9em;
+              font-weight: normal;
+              opacity: 0.8;
+            }
+          </style>
+          <input type="text" id="hexInput" value="#00b294" />
+        </div>
+
+        <div class="input-group">
+          <label for="decimalOutput"
+            >Decimal Value:<br /><span class="color-hint">(BBGGRR)</span></label
+          >
+          <style>
+            .color-hint {
+              color: #888888;
+              font-size: 0.9em;
+              font-weight: normal;
+              opacity: 0.8;
+            }
+          </style>
+          <input type="text" id="decimalOutput" value="8519683" />
+          <div class="error-message" id="decimalError">
+            Please enter a valid decimal color value
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="copy-btn" id="copyBtn">
+          <span>Copy Decimal Value</span>
+        </button>
+        <button class="reset-btn" id="resetBtn">
+          <span>Reset to Default</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const colorPicker = document.getElementById("colorPicker");
+        const hexInput = document.getElementById("hexInput");
+        const decimalOutput = document.getElementById("decimalOutput");
+        const colorPreview = document.getElementById("colorPreview");
+        const copyBtn = document.getElementById("copyBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const decimalError = document.getElementById("decimalError");
+
+        let updating = false; // Prevent circular updates
+
+        // Initialize
+        updateFromHex(colorPicker.value);
+
+        // Color picker change event
+        colorPicker.addEventListener("input", function () {
+          if (updating) return;
+          hexInput.value = colorPicker.value;
+          updateFromHex(colorPicker.value);
+        });
+
+        // Hex input change event
+        hexInput.addEventListener("input", function () {
+          if (updating) return;
+          let value = hexInput.value;
+          if (value.startsWith("#")) {
+            if (value.length === 7) {
+              // Complete #RRGGBB format
+              colorPicker.value = value;
+              updateFromHex(value);
+            }
+          } else {
+            if (value.length === 6) {
+              // RRGGBB format without #
+              colorPicker.value = "#" + value;
+              updateFromHex("#" + value);
+            }
+          }
+        });
+
+        // Decimal input change event
+        decimalOutput.addEventListener("input", function () {
+          if (updating) return;
+          let value = decimalOutput.value.trim();
+
+          // Check if it's a valid number
+          if (!/^\d+$/.test(value)) {
+            decimalError.style.display = "block";
+            return;
+          }
+
+          decimalError.style.display = "none";
+
+          // Convert to number
+          let decimal = parseInt(value, 10);
+
+          // Check if within valid range
+          if (decimal < 0 || decimal > 16777215) {
+            decimalError.style.display = "block";
+            return;
+          }
+
+          // Convert to hex
+          let hex = decimal.toString(16).toUpperCase();
+
+          // Pad with zeros to 6 digits
+          while (hex.length < 6) {
+            hex = "0" + hex;
+          }
+
+          // Reorder to RRGGBB format
+          let bb = hex.substring(0, 2);
+          let gg = hex.substring(2, 4);
+          let rr = hex.substring(4, 6);
+          let rrggbb = rr + gg + bb;
+
+          // Update display
+          updating = true;
+          hexInput.value = "#" + rrggbb.toLowerCase();
+          colorPicker.value = "#" + rrggbb.toLowerCase();
+          updateDisplay("#" + rrggbb, decimal);
+          updating = false;
+        });
+
+        // Copy button click event
+        copyBtn.addEventListener("click", function () {
+          decimalOutput.select();
+          document.execCommand("copy");
+
+          // Show copy success feedback
+          const originalText = copyBtn.innerHTML;
+          copyBtn.innerHTML = "<span>Copied!</span>";
+          copyBtn.classList.add("copied");
+
+          setTimeout(function () {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove("copied");
+          }, 2000);
+        });
+
+        // Reset button click event
+        resetBtn.addEventListener("click", function () {
+          updateFromHex("#00b294");
+        });
+
+        // Update from hex value
+        function updateFromHex(hexColor) {
+          // Extract RRGGBB part (remove #)
+          let rgb = hexColor.substring(1);
+
+          // Reorder to BBGGRR
+          let rr = rgb.substring(0, 2);
+          let gg = rgb.substring(2, 4);
+          let bb = rgb.substring(4, 6);
+          let bbggrr = bb + gg + rr;
+
+          // Convert to decimal
+          let decimal = parseInt(bbggrr, 16);
+
+          // Update display
+          updateDisplay(hexColor, decimal);
+
+          // Update decimal input field
+          decimalOutput.value = decimal;
+
+          // Update hex input field
+          hexInput.value = hexColor;
+
+          // Update color picker
+          colorPicker.value = hexColor;
+        }
+
+        // Function to update display
+        function updateDisplay(hexColor, decimal) {
+          // Update color preview
+          colorPreview.style.backgroundColor = hexColor;
+
+          // Create contrast display
+          colorPreview.innerHTML = `
+                    <div style="display: flex; justify-content: space-around; width: 100%;">
+                        <span style="color: black; font-weight: bold; text-shadow: 0 0 2px white;">${hexColor.toUpperCase()}</span>
+                        <span style="color: white; font-weight: bold; text-shadow: 0 0 2px black;">${hexColor.toUpperCase()}</span>
+                    </div>
+                `;
+        }
+      });
+    </script>
+  </body>
+</html>
